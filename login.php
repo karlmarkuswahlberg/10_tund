@@ -59,7 +59,7 @@
 					$_SESSION["login_message"] = $login_response->success->message;
 					
 					header("Location: data.php");
-					
+					exit();
 				}
             
 			
