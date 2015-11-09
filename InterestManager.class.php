@@ -83,8 +83,73 @@ class InterestManager {
 		
 		$html .= '</select>';
 		return $html;
-	}
 		
+	}
+	function addUserInterest($interest_id){
+		
+		
+        
+		$response = new StdClass();
+		//kas selline interest olemas
+		$stmt = $this->connection->prepare("SELECT id FROM user_interests WHERE interests_id = ?");
+        echo $this->connection->error;
+		$stmt->bind_param("i", $interest_id);
+        echo $stmt->error;
+		$stmt->execute();
+		
+		//kas oli 1 rida andmeid
+		if($stmt->fetch()){
+			$error = new StdClass();
+			$error->id = 0;
+			$error->message = "Kasutajal see huviala on juba olemas!";
+			$response->error = $error;
+			return $response;
+		}
+	
+		//*************************
+		//******* OLULINE *********
+		//*************************
+		//panen eelmise käsu kinni
+		$stmt->close();
+	
+		$stmt = $this->connection->prepare("INSERT INTO user_interests (user_id, interests_id) VALUES (?,?)");
+		$stmt->bind_param("ii", $this->user_id, $interest_id);
+		
+		if($stmt->execute()){
+			// edukalt salvestas
+			$success = new StdClass();
+			$success->message = "Huviala edukalt salvestatud";
+			$response->success = $success;
+			
+		}else{
+			// midagi läks katki
+			$error = new StdClass();
+			$error->id =1;
+			$error->message = "Midagi läks katki!";
+			$response->error = $error;
+		}
+		
+		$stmt->close();
+		
+		return $response;
+    }
+	function getUserInterests(){ //saada kõik aksutaja huvialad kätte.
+		
+		//on olemas kasutaja id $this->user_id;
+		//kõik tema huvialade nimed
+		
+		$stmt = $this->connection->prepare("SELECT interests.name FROM user_interests INNER JOIN interests ON user_interests.interests_id = interests.id WHERE user_interests.user_id = ?");
+		$stmt->bind_param("i", $this->user_id);
+		$stmt->bind_result($name);
+		$stmt->execute();
+		
+		while($stmt->fetch()){
+			
+			echo $name.", ";
+		}
+		//ja selle järgi saab leida nt sarnaste huvidega kasutajaid ja neid loetleda.
+	}
+	
 		
 } ?>
 
